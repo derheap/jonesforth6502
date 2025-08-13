@@ -4,8 +4,9 @@
 	org $0
 
 	seg CODE
-	org $6000	; starting address
+	org $803	; starting address
 
 Start
 	lda #$32
         sta $400
+        jmp Start
