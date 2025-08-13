@@ -4,7 +4,8 @@
 	org $0
 
 	seg CODE
-	org $803	; starting address
+	org $6000	; starting address
 
 Start
-	lda #$01
+	lda #$32
+        sta $400
