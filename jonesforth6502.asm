@@ -76,7 +76,29 @@ DOCOL	PUSHRSP
         STA IP
         LDA W+1
         STA IP+1
-NEXT    NEXTM
+NEXTJ   NEXTM
+
+	MAC NEXT
+	JMP NEXTJ
+        ENDM
+
+LAST	SET 0
+
+	MAC DEFCODE
+        WORD LAST
+LAST	SET *-2
+        BYTE {2}+{3}
+        DC.S {1}
+        WORD *+2
+        ENDM
+        
+DROP    DEFCODE "DROP",4,0
+        DEX
+        DEX
+        NEXT
+        
+SWAP	DEFCODE "SWAP",4,0
+	NEXT
         
 FAKE	DC.W FAKE+2, FAKE+4
 HALT	JMP HALT
