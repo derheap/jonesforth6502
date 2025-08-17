@@ -19,14 +19,16 @@ X	equ Base+4
 PSP	equ $300
 
 Init
-	; Clear PSP
-	LDX #$00
+	SEI
+	; Clear PSP. PSP grows down
+	LDX #$FF
         TXA
 LoopI   STA PSP,x
-        INX
         CPX #$00
+        DEX		;Wrap around
         BNE LoopI
-        
+        TXS		;X=$FF. Init return stack
+        CLI
         JMP TEST0
    
 ; NEXT
@@ -92,12 +94,28 @@ LAST	SET *-2
         WORD *+2
         ENDM
         
+; X register points to next free cell (MSB)
+        
 DROP    DEFCODE "DROP",4,0
-        DEX
-        DEX
+;@TODO Ignore wrap around?
+        INX
+        INX
         NEXT
         
 SWAP	DEFCODE "SWAP",4,0
+	LDA PSP+1,x	; Reason for growing stacks down?
+        STA X
+        LDA PSP+2,x
+        STA X+1
+	NEXT
+        
+DUP	DEFCODE "DUP",3,0
+	DEX
+        DEX
+        LDA PSP+3
+        STA PSP+1
+        LDA PSP+4
+        STA PSP+2
 	NEXT
         
 FAKE	DC.W FAKE+2, FAKE+4
