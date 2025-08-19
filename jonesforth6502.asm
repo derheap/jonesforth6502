@@ -12,7 +12,7 @@
 ;
 ;6502        Zpage Zpage X     SP    Zpage  memory  [KUN81]
 
-Base	equ $50
+Base	equ $80
 IP	equ Base
 W	equ Base+2
 X	equ Base+4
@@ -31,6 +31,9 @@ LoopI   DEX
         DEX
         TXS		;X=$FF. Init return stack
         CLI
+        LDA #$FF
+        STA $32		;inverse flag
+        JSR $FC58
         JMP TEST0
    
 ; NEXT
