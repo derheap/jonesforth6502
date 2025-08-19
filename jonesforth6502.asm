@@ -21,12 +21,14 @@ PSP	equ $300
 Init
 	SEI
 	; Clear PSP. PSP grows down
-	LDX #$FF
-        TXA
-LoopI   STA PSP,x
+	LDX #$00
+        LDA #00
+LoopI   DEX
+        TXA		;debug
+	STA PSP,x
         CPX #$00
-        DEX		;Wrap around
         BNE LoopI
+        DEX
         TXS		;X=$FF. Init return stack
         CLI
         JMP TEST0
@@ -96,33 +98,80 @@ LAST	SET *-2
         
 ; X register points to next free cell (MSB)
         
-DROP    DEFCODE "DROP",4,0
+	DEFCODE "DROP",4,0
 ;@TODO Ignore wrap around?
-        INX
+DROP    INX
         INX
         NEXT
         
-SWAP	DEFCODE "SWAP",4,0
-	LDA PSP+1,x	; Reason for growing stacks down?
+	DEFCODE "SWAP",4,0
+SWAP	LDA PSP+1,x	; Reason for growing stacks down?
         STA X
         LDA PSP+2,x
         STA X+1
 	NEXT
         
-DUP	DEFCODE "DUP",3,0
-	DEX
+	DEFCODE "DUP",3,0
+DUP	DEX		; new cell
         DEX
-        LDA PSP+3
-        STA PSP+1
-        LDA PSP+4
-        STA PSP+2
+        LDA PSP+3,x
+        STA PSP+1,x
+        LDA PSP+4,x
+        STA PSP+2,x
 	NEXT
         
-FAKE	DC.W FAKE+2, FAKE+4
+        
+        ; LOTS MISSING
+        
+	DEFCODE "EXIT",4,0
+EXIT	POPRSP
+        JMP HALT
+        NEXT
+        
+	DEFCODE "LIT",3,0
+	;(IP)->Stack
+LIT     DEX		; new cell
+        DEX
+        LDY #0
+        LDA (IP),y
+        STA PSP+1,x
+        INY
+        LDA (IP),y
+        STA PSP+2,x
+	; IP+2
+        CLC
+        LDA IP
+        ADC #2
+        STA IP
+        LDA IP+1
+        ADC #0
+        STA IP+1
+	NEXT
+        
+        ; lots missing
+        
+COUT	EQU $FDED
+        
+        DEFCODE "EMIT",4,0
+EMIT	TXA
+	PHA
+	LDA PSP+1,x
+        JSR COUT
+        PLA
+        TAX
+        DEX
+        DEX
+        NEXT
+        ENDM
+        
+        
+FAKE	DC.W DOCOL, LIT, 23, LIT, 42, LIT, 512+8, SWAP, DUP
+	DC.W EMIT, LIT, $C1, EMIT
+        DC.W EXIT
 HALT	JMP HALT
         
 TEST0	LDA #>FAKE
 	STA IP+1
         LDA #<FAKE
         STA IP
-	NEXTM
+	NEXT
