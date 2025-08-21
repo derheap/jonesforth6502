@@ -148,6 +148,19 @@ ADD	CLC
         NEXT
         ENDM
         
+        DEFCODE "-",1,0
+SUB	SEC
+	LDA SOSL,X
+        SBC TOSL,X
+        STA SOSL,X
+        LDA SOSH,X
+        SBC TOSH,X
+        STA SOSH,X
+        INX
+        INX
+        NEXT
+        ENDM
+        
         
         ; LOTS MISSING
         
@@ -196,7 +209,8 @@ EMIT	TXA
         
  	DEFWORD "FAKE",4,0  
 FAKE	DC.W LIT, 23, LIT, 42, LIT, 512+8, SWAP, DUP
-	DC.W LIT, 42, LIT, 8, ADD, EMIT
+	DC.W LIT, 42, LIT, 8, ADD, LIT, 1, SUB
+        DC.W EMIT
         DC.W EXIT
 HALT	JMP HALT
         
