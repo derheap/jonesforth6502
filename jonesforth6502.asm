@@ -16,7 +16,11 @@ Base	equ $80
 IP	equ Base
 W	equ Base+2
 X	equ Base+4
-PSP	equ $300
+PSP	equ $300	; Parameter stack
+TOSL	equ PSP+1	; Top of stack
+TOSH	equ PSP+2
+SOSL	equ PSP+3	; 2nd of stack
+SOSH	equ PSP+4
 
 Init
 	SEI
@@ -99,6 +103,14 @@ LAST	SET *-2
         WORD *+2
         ENDM
         
+        MAC DEFWORD
+        WORD LAST
+LAST	SET *-2
+	BYTE {2}+{3}
+        DC.S {1}
+        WORD DOCOL
+        ENDM
+        
 ; X register points to next free cell (MSB)
         
 	DEFCODE "DROP",4,0
@@ -117,11 +129,24 @@ SWAP	LDA PSP+1,x	; Reason for growing stacks down?
 	DEFCODE "DUP",3,0
 DUP	DEX		; new cell
         DEX
-        LDA PSP+3,x
-        STA PSP+1,x
-        LDA PSP+4,x
-        STA PSP+2,x
+        LDA SOSL,x
+        STA TOSL,x
+        LDA SOSH,x
+        STA TOSH,x
 	NEXT
+        
+        DEFCODE "+",1,0
+ADD	CLC
+	LDA SOSL,x
+        ADC TOSL,x
+        STA SOSL,x
+        LDA SOSH,x
+        ADC TOSH,x
+        STA SOSH,x
+        INX
+        INX
+        NEXT
+        ENDM
         
         
         ; LOTS MISSING
@@ -137,10 +162,10 @@ LIT     DEX		; new cell
         DEX
         LDY #0
         LDA (IP),y
-        STA PSP+1,x
+        STA TOSL,x
         INY
         LDA (IP),y
-        STA PSP+2,x
+        STA TOSH,x
 	; IP+2
         CLC
         LDA IP
@@ -158,7 +183,9 @@ COUT	EQU $FDED
         DEFCODE "EMIT",4,0
 EMIT	TXA
 	PHA
-	LDA PSP+1,x
+	LDA TOSL,x
+        AND #$7F
+        ORA #$80
         JSR COUT
         PLA
         TAX
@@ -167,14 +194,14 @@ EMIT	TXA
         NEXT
         ENDM
         
-        
-FAKE	DC.W DOCOL, LIT, 23, LIT, 42, LIT, 512+8, SWAP, DUP
-	DC.W EMIT, LIT, $C1, EMIT
+ 	DEFWORD "FAKE",4,0  
+FAKE	DC.W LIT, 23, LIT, 42, LIT, 512+8, SWAP, DUP
+	DC.W LIT, 42, LIT, 8, ADD, EMIT
         DC.W EXIT
 HALT	JMP HALT
         
-TEST0	LDA #>FAKE
+TEST0	LDA #>(FAKE-2)
 	STA IP+1
-        LDA #<FAKE
+        LDA #<(FAKE-2)
         STA IP
 	NEXT
