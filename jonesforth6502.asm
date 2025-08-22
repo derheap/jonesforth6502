@@ -120,10 +120,18 @@ DROP    INX
         NEXT
         
 	DEFCODE "SWAP",4,0
-SWAP	LDA PSP+1,x	; Reason for growing stacks down?
+SWAP	LDA TOSL,x	; Reason for growing stacks down?
         STA X
-        LDA PSP+2,x
+        LDA TOSH,x
         STA X+1
+        LDA SOSL,X
+        STA TOSL,X
+        LDA SOSH,X
+        STA TOSH,X
+        LDA X
+        STA SOSL,X
+        LDA X+1
+        STA SOSH,X
 	NEXT
         
 	DEFCODE "DUP",3,0
@@ -160,6 +168,21 @@ SUB	SEC
         INX
         NEXT
         ENDM
+        
+MUL	DEFCODE "*",1,0
+	LDA TOSL,X
+        STA $54
+        LDA TOSH,X
+        STA $55
+        LDA SOSL,X
+        STA $50
+        LDA SOSH,X
+        STA $51
+        LDA #0
+        STA $52
+        STA $53
+        JSR $FB60
+	NEXT
         
         
         ; LOTS MISSING
