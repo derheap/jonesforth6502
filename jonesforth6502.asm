@@ -16,6 +16,9 @@ Base	equ $80
 IP	equ Base
 W	equ Base+2
 X	equ Base+4
+CURBUF	equ Base+6
+BUFEND	equ Base+8
+
 PSP	equ $300	; Parameter stack
 TOSL	equ PSP+1	; Top of stack
 TOSH	equ PSP+2
@@ -37,7 +40,10 @@ LoopI   DEX
         CLI
         LDA #$FF
         STA $32		;inverse flag
-        JSR $FC58
+        JSR $FC58	;HOME
+        LDA #0
+        STA CURBUF
+        STA BUFEND
         JMP TEST0
    
 ; NEXT
@@ -194,8 +200,8 @@ EXIT	POPRSP
         
 	DEFCODE "LIT",3,0
 	;(IP)->Stack
-LIT     DEX		; new cell
-        DEX
+LIT     DEX
+	DEX
         LDY #0
         LDA (IP),y
         STA TOSL,x
@@ -217,23 +223,26 @@ LIT     DEX		; new cell
 COUT	EQU $FDED
         
         DEFCODE "EMIT",4,0
-EMIT	TXA
-	PHA
+EMIT	;TXA
+	;PHA
 	LDA TOSL,x
-        AND #$7F
-        ORA #$80
+        ;AND #$7F
+        ;ORA #$80
         JSR COUT
-        PLA
-        TAX
+        ;PLA
+        ;TAX
         DEX
         DEX
         NEXT
         ENDM
         
  	DEFWORD "FAKE",4,0  
-FAKE	DC.W LIT, 23, LIT, 42, LIT, 512+8, SWAP, DUP
-	DC.W LIT, 42, LIT, 8, ADD, LIT, 1, SUB
-        DC.W EMIT
+FAKE	;DC.W LIT, 23, LIT, 42, LIT, 512+8, SWAP, DUP
+	;DC.W LIT, 42, LIT, 8, DUP, EMIT, ADD, LIT, 1, SUB
+        ;DC.W EMIT
+        DC.W LIT, 42
+        DC.W LIT, 23
+        DC.W SWAP, DUP
         DC.W EXIT
 HALT	JMP HALT
         
