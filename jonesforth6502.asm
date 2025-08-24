@@ -20,10 +20,8 @@ CURBUF	equ Base+6
 BUFEND	equ Base+8
 
 PSP	equ $300	; Parameter stack
-TOSL	equ PSP+1	; Top of stack
-TOSH	equ PSP+2
-SOSL	equ PSP+3	; 2nd of stack
-SOSH	equ PSP+4
+TOS	equ PSP+1	; Top of stack
+SOS	equ PSP+3	; 2nd of stack
 
 Init
 	SEI
@@ -126,37 +124,37 @@ DROP    INX
         NEXT
         
 	DEFCODE "SWAP",4,0
-SWAP	LDA TOSL,x	; Reason for growing stacks down?
+SWAP	LDA TOS,x	; Reason for growing stacks down?
         STA X
-        LDA TOSH,x
+        LDA TOS+1,x
         STA X+1
-        LDA SOSL,X
-        STA TOSL,X
-        LDA SOSH,X
-        STA TOSH,X
+        LDA SOS,X
+        STA TOS,X
+        LDA SOS+1,X
+        STA TOS+1,X
         LDA X
-        STA SOSL,X
+        STA SOS,X
         LDA X+1
-        STA SOSH,X
+        STA SOS+1,X
 	NEXT
         
 	DEFCODE "DUP",3,0
 DUP	DEX		; new cell
         DEX
-        LDA SOSL,x
-        STA TOSL,x
-        LDA SOSH,x
-        STA TOSH,x
+        LDA SOS,x
+        STA TOS,x
+        LDA SOS+1,x
+        STA TOS+1,x
 	NEXT
         
         DEFCODE "+",1,0
 ADD	CLC
-	LDA SOSL,x
-        ADC TOSL,x
-        STA SOSL,x
-        LDA SOSH,x
-        ADC TOSH,x
-        STA SOSH,x
+	LDA SOS,x
+        ADC TOS,x
+        STA SOS,x
+        LDA SOS+1,x
+        ADC TOS+1,x
+        STA SOS+1,x
         INX
         INX
         NEXT
@@ -164,25 +162,25 @@ ADD	CLC
         
         DEFCODE "-",1,0
 SUB	SEC
-	LDA SOSL,X
-        SBC TOSL,X
-        STA SOSL,X
-        LDA SOSH,X
-        SBC TOSH,X
-        STA SOSH,X
+	LDA SOS,X
+        SBC TOS,X
+        STA SOS,X
+        LDA SOS+1,X
+        SBC TOS+1,X
+        STA SOS+1,X
         INX
         INX
         NEXT
         ENDM
         
 MUL	DEFCODE "*",1,0
-	LDA TOSL,X
+	LDA TOS,X
         STA $54
-        LDA TOSH,X
+        LDA TOS+1,X
         STA $55
-        LDA SOSL,X
+        LDA SOS,X
         STA $50
-        LDA SOSH,X
+        LDA SOS+1,X
         STA $51
         LDA #0
         STA $52
@@ -204,10 +202,10 @@ LIT     DEX
 	DEX
         LDY #0
         LDA (IP),y
-        STA TOSL,x
+        STA TOS,x
         INY
         LDA (IP),y
-        STA TOSH,x
+        STA TOS+1,x
 	; IP+2
         CLC
         LDA IP
@@ -225,7 +223,7 @@ COUT	EQU $FDED
         DEFCODE "EMIT",4,0
 EMIT	;TXA
 	;PHA
-	LDA TOSL,x
+	LDA TOS,x
         ;AND #$7F
         ;ORA #$80
         JSR COUT
@@ -240,9 +238,10 @@ EMIT	;TXA
 FAKE	;DC.W LIT, 23, LIT, 42, LIT, 512+8, SWAP, DUP
 	;DC.W LIT, 42, LIT, 8, DUP, EMIT, ADD, LIT, 1, SUB
         ;DC.W EMIT
+        DC.W LIT, 65
         DC.W LIT, 42
-        DC.W LIT, 23
-        DC.W SWAP, DUP
+        DC.W SWAP, DUP, LIT, 128, ADD
+        DC.W EMIT
         DC.W EXIT
 HALT	JMP HALT
         
